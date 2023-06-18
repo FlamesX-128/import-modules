@@ -15,4 +15,4 @@ import-all is a crate that enhances the ease of importing modules using regex pa
 
 ## License
 
-This project is licensed under the [MIT]() license - see the LICENSE.md file for details.
+This project is licensed under the [MIT](https://opensource.org/license/mit/) license - see the LICENSE.md file for details.
