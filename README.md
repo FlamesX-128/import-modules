@@ -9,6 +9,7 @@ import-modules is a crate that enhances the ease of importing modules using rege
 ```rs
 use import_modules::import_pub_modules;
 
+// import_pub_modules!(directory: String, pattern: Regex)
 import_pub_modules!("tests/pub_modules/", "^((?!mod.rs).)*$");
 // Equivalent to:
 // pub mod a.rs;
