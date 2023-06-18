@@ -1,0 +1,15 @@
+[package]
+name = "import-modules"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+authors = ["FlamesX-128 <glowingorangeflames@gmail.com>"]
+exclude = ["tarjet", "tests"]
+
+[lib]
+proc_macro = true
+
+[dependencies]
+regex = "1.8"
+fancy-regex = "0.11"
