@@ -1,7 +1,7 @@
-use import_modules::import_pub_modules;
+use import_modules::import_modules;
 
 #[cfg(test)]
-import_pub_modules!("tests/priv_modules/", "^((?!mod.rs).)*$");
+import_modules!("tests/priv_modules/", "^((?!mod.rs).)*$");
 
 #[cfg(test)]
 #[test]
