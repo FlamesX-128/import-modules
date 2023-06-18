@@ -2,7 +2,7 @@
 
 ## Description
 
-import-all is a crate that enhances the ease of importing modules using regex patterns. It is based on the npm package require-all.
+import-modules is a crate that enhances the ease of importing modules using regex patterns. It is based on the npm package require-all.
 
 ## Usage
 
