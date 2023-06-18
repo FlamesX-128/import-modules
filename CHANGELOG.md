@@ -1,24 +1,4 @@
-# import-modules
-
-## Description
-
-import-modules is a crate that enhances the ease of importing modules using regex patterns. It is based on the npm package require-all.
-
-## Examples
-
-Review the tests directory to see how to use it properly.
-
-```rust, ignore
-use import_modules::import_pub_modules;
-
-import_pub_modules!("tests/pub_modules/", "^((?!mod\\.rs).)*$");
-```
-
-## Authors
-
-- [FlamesX-128](https://github.com/FlamesX-128/)
-
-## Change log
+# Change log
 
 - 0.1.4
     + Additional documentation has been added, including the proc macros `import_pub_modules`, `import_modules`, `import_scope_modules`.
@@ -35,7 +15,3 @@ import_pub_modules!("tests/pub_modules/", "^((?!mod\\.rs).)*$");
 
 - 0.1
     + First release
-
-## License
-
-This project is licensed under the [MIT](https://github.com/FlamesX-128/import-modules/blob/main/LICENSE) license.

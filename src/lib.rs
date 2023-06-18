@@ -123,6 +123,25 @@ fn module_handler(
     output.parse().unwrap()
 }
 
+/// #### Description
+/// 
+/// Import public modules from a directory.
+/// 
+/// #### Example
+/// 
+/// ```rust, ignore
+/// use import_modules::import_pub_modules;
+/// 
+/// import_pub_modules!("src", "^((?!mod.rs).)*$");
+/// ```
+/// 
+/// #### Returns
+/// 
+/// ```rust, ignore
+/// pub mod module1;
+/// pub mod moduleN;
+/// ```
+/// 
 #[proc_macro]
 pub fn import_pub_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = input.to_string();
@@ -138,6 +157,25 @@ pub fn import_pub_modules(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     )
 }
 
+/// #### Description
+/// 
+/// Import modules from a directory.
+///
+/// #### Example
+/// 
+/// ```rust, ignore
+/// use import_modules::import_modules;
+/// 
+/// import_modules!("src", "^((?!mod.rs).)*$");
+/// ```
+/// 
+/// #### Returns
+/// 
+/// ```rust, ignore
+/// mod module1;
+/// mod moduleN;
+/// ```
+/// 
 #[proc_macro]
 pub fn import_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = input.to_string();
@@ -153,6 +191,34 @@ pub fn import_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     )
 }
 
+/// #### Description
+/// 
+/// Import modules from a directory on function scope.
+/// 
+/// #### Example
+/// 
+/// ```rust, ignore
+/// use import_modules::{import_modules, import_scope_modules};
+/// 
+/// import_modules!("src", "^((?!mod.rs).)*$");
+/// 
+/// fn main() {
+///    import_scope_modules!("src", "^((?!mod.rs).)*$", "function()");
+/// }
+/// ```
+/// 
+/// #### Returns
+/// 
+/// ```rust, ignore
+/// mod module1;
+/// mod moduleN;
+/// 
+/// fn main() {
+///    module1::function();
+///    moduleN::function();
+/// }
+/// ```
+/// 
 #[proc_macro]
 pub fn import_scope_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = input.to_string();
