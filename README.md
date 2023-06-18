@@ -20,6 +20,9 @@ import_pub_modules!("tests/pub_modules/", "^((?!mod\\.rs).)*$");
 
 ## Change log
 
+- 0.1.5
+    + The problem fixed: Misdeclared description in Cargo.toml.
+
 - 0.1.4
     + Additional documentation has been added, including the proc macros `import_pub_modules`, `import_modules`, `import_scope_modules`.
 
