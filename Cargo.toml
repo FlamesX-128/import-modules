@@ -11,7 +11,7 @@ license = "MIT"
 authors = ["FlamesX-128 <glowingorangeflames@gmail.com>"]
 exclude = ["target", "tests"]
 
-description = "import-all is a crate that enhances the ease of importing modules using regex patterns. It is based on the npm package require-all."
+description = "import-modules is a crate that enhances the ease of importing modules using regex patterns. It is based on the npm package require-all."
 
 readme = "README.md"
 homepage = "https://github.com/FlamesX-128/import-modules#import-modules"
