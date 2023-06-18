@@ -10,12 +10,10 @@ struct ModuleConfig {
     pub entry: String,
 }
 
-fn parse_modules(config: ModuleConfig, modules: Vec<String>) -> Vec<String>
-{
+fn parse_modules(config: ModuleConfig, modules: Vec<String>) -> Vec<String> {
     let mut parsed_modules = Vec::new();
 
-    for module in modules
-    {
+    for module in modules {
         let mut parsed_module = String::new();
 
         let module = module.replace(&config.directory, "");
@@ -23,25 +21,21 @@ fn parse_modules(config: ModuleConfig, modules: Vec<String>) -> Vec<String>
 
         let module = module.replace(path::MAIN_SEPARATOR_STR, "::");
 
-        if module.len() == 0
-        {
+        if module.len() == 0 {
             continue;
         }
 
-        if config.pub_keyword == true
-        {
+        if config.pub_keyword == true {
             parsed_module.push_str("pub ");
         }
 
-        if config.mod_keyword == true
-        {
+        if config.mod_keyword == true {
             parsed_module.push_str("mod ");
         }
 
         parsed_module.push_str(&module);
 
-        if config.entry.len() > 0
-        {
+        if config.entry.len() > 0 {
             parsed_module.push_str("::");
             parsed_module.push_str(&config.entry);
         }
@@ -63,18 +57,15 @@ fn find_modules(
     for path in std::fs::read_dir(directory).unwrap() {
         let path = path.unwrap().path();
 
-        if path.is_dir()
-        {
+        if path.is_dir() {
             continue;
         }
 
         let path = path.to_str().unwrap();
 
-        if pattern.is_match(path).unwrap()
-        {
+        if pattern.is_match(path).unwrap() {
             modules.push(path.to_string());
         }
-
     }
 
     Ok(modules)
@@ -104,75 +95,71 @@ fn parse_parameters(input: String) -> Vec<String> {
 }
 
 fn module_handler(
-    pub_keyword: bool, mod_keyword: bool, directory: String, pattern: String,
-    entry: String
+    pub_keyword: bool, mod_keyword: bool, mut directory: String,
+    pattern: String, entry: String,
 )
     -> proc_macro::TokenStream
 {
+    if directory.ends_with("/") == false {
+        directory.push_str(path::MAIN_SEPARATOR_STR);
+    }
+
     let pattern = fancy_regex::Regex::new(&pattern).unwrap();
 
     let modules = find_modules(&directory, &pattern).unwrap();
-    
+
     let module_config = ModuleConfig {
         pub_keyword, mod_keyword,
-        directory, entry
+        directory, entry,
     };
 
     let modules = parse_modules(module_config, modules);
     let output = modules.join("\n");
 
-    println!("{}", output);
-
     output.parse().unwrap()
 }
 
 #[proc_macro]
-pub fn import_pub_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream
-{
+pub fn import_pub_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = input.to_string();
 
     let parameters = parse_parameters(input);
 
-    if parameters.len() != 2
-    {
+    if parameters.len() != 2 {
         panic!("Invalid number of parameters: {}", parameters.len());
     }
 
     module_handler(
-        true, true, parameters[0].clone(), parameters[1].clone(), "".to_string()
+        false, true, parameters[0].clone(), parameters[1].clone(), "".to_string(),
     )
 }
 
 #[proc_macro]
-pub fn import_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream
-{
+pub fn import_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = input.to_string();
 
     let parameters = parse_parameters(input);
 
-    if parameters.len() != 2
-    {
+    if parameters.len() != 2 {
         panic!("Invalid number of parameters: {}", parameters.len());
     }
 
     module_handler(
-        false, true, parameters[0].clone(), parameters[1].clone(), "".to_string()
+        false, true, parameters[0].clone(), parameters[1].clone(), "".to_string(),
     )
 }
 
 #[proc_macro]
-pub fn import_scope_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream
-{
+pub fn import_scope_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = input.to_string();
 
     let parameters = parse_parameters(input);
 
-    if parameters.len() != 3
-    {
+    if parameters.len() != 3 {
         panic!("Invalid number of parameters: {}", parameters.len());
     }
 
     module_handler(
-        false, false, parameters[0].clone(), parameters[1].clone(), parameters[2].clone()
+        false, false, parameters[0].clone(), parameters[1].clone(), parameters[2].clone(),
     )
 }

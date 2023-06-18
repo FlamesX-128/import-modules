@@ -1,8 +1,11 @@
 [package]
 name = "import-modules"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
+
 license-url = "https://github.com/FlamesX-128/import-modules/blob/main/LICENSE"
+repository = "https://github.com/FlamesX-128/import-modules"
+
 license = "MIT"
 
 authors = ["FlamesX-128 <glowingorangeflames@gmail.com>"]
@@ -10,9 +13,8 @@ exclude = ["tarjet", "tests"]
 
 description = "import-all is a crate that enhances the ease of importing modules using regex patterns. It is based on the npm package require-all."
 
-readme = "README.md"
+readme = "https://github.com/FlamesX-128/import-modules/blob/main/README.md"
 homepage = "https://github.com/FlamesX-128/import-modules#import-modules"
-repository = "https://github.com/FlamesX-128/import-modules"
 
 keywords = [
     "import",
@@ -26,5 +28,4 @@ keywords = [
 proc_macro = true
 
 [dependencies]
-regex = "1.8"
 fancy-regex = "0.11"
