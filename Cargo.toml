@@ -9,7 +9,7 @@ repository = "https://github.com/FlamesX-128/import-modules"
 license = "MIT"
 
 authors = ["FlamesX-128 <glowingorangeflames@gmail.com>"]
-exclude = ["tarjet", "tests"]
+exclude = ["target", "tests"]
 
 description = "import-all is a crate that enhances the ease of importing modules using regex patterns. It is based on the npm package require-all."
 
