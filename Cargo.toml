@@ -2,10 +2,23 @@
 name = "import-modules"
 version = "0.1.0"
 edition = "2021"
+license-url = "https://github.com/FlamesX-128/import-modules/blob/main/LICENSE"
 license = "MIT"
 
 authors = ["FlamesX-128 <glowingorangeflames@gmail.com>"]
 exclude = ["tarjet", "tests"]
+
+readme = "README.md"
+homepage = "https://github.com/FlamesX-128/import-modules#import-modules"
+repository = "https://github.com/FlamesX-128/import-modules"
+
+keywords = [
+    "import",
+    "modules",
+    "module",
+    "require",
+    "all"
+]
 
 [lib]
 proc_macro = true
