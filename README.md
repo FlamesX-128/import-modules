@@ -22,6 +22,9 @@ import_pub_modules!("tests/pub_modules/", "^((?!mod.rs).)*$");
 
 ## Version History
 
+- 0.1.3
+    + The problem fixed: String parameters now support escaping characters with backslashes, resolving compatibility with Windows.
+
 - 0.1.2
     + The problem fixed: The macro import_pub_modules did not make the modules public.
     + The problem fixed: Directories are already included as modules.

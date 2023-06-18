@@ -1,3 +1,4 @@
+use core::panic;
 use std::path;
 
 extern crate proc_macro;
@@ -71,6 +72,8 @@ fn parse_parameters(input: String) -> Vec<String> {
     let mut parameters = Vec::new();
 
     let mut parameter = String::new();
+
+    let mut is_escape = false;
     let mut is_string = false;
 
     for c in input.chars() {
@@ -79,10 +82,15 @@ fn parse_parameters(input: String) -> Vec<String> {
             parameter.clear();
         } else if c == ' ' && is_string == false {
             continue;
-        } else if c == '"' {
+        } else if c == '"' && is_escape == false {
             is_string = !is_string;
-        } else {
+        } else if c == '\\' && is_escape == false && is_string == true {
+            is_escape = true;
+        } else if is_string {
             parameter.push(c);
+            is_escape = false;
+        } else {
+            panic!("Invalid character: {}", c);
         }
     }
 
