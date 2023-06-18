@@ -57,10 +57,6 @@ fn find_modules(
     for path in std::fs::read_dir(directory).unwrap() {
         let path = path.unwrap().path();
 
-        if path.is_dir() {
-            continue;
-        }
-
         let path = path.to_str().unwrap();
 
         if pattern.is_match(path).unwrap() {
@@ -130,7 +126,7 @@ pub fn import_pub_modules(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     }
 
     module_handler(
-        false, true, parameters[0].clone(), parameters[1].clone(), "".to_string(),
+        true, true, parameters[0].clone(), parameters[1].clone(), "".to_string(),
     )
 }
 

@@ -22,6 +22,10 @@ import_pub_modules!("tests/pub_modules/", "^((?!mod.rs).)*$");
 
 ## Version History
 
+- 0.1.2
+    + The problem fixed: The macro import_pub_modules did not make the modules public.
+    + The problem fixed: Directories are already included as modules.
+
 - 0.1.1
     + The problem fixed: If the last slash was not included in the directory path, it would cause an error.
 

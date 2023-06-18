@@ -1,3 +1,3 @@
-mod pub_modules;
-mod priv_modules;
-mod scope_modules;
+use import_modules::import_pub_modules;
+
+import_pub_modules!("tests/", "^((?!mod.rs).)*$");
