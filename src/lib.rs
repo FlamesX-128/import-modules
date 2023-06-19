@@ -233,3 +233,10 @@ pub fn import_scope_modules(input: proc_macro::TokenStream) -> proc_macro::Token
         false, false, parameters[0].clone(), parameters[1].clone(), parameters[2].clone(),
     )
 }
+
+#[proc_macro]
+pub fn import(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    
+    
+    "".parse().unwrap()
+}

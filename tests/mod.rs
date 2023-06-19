@@ -1,3 +1,23 @@
-use import_modules::import_pub_modules;
+use import_modules::import;
 
-import_pub_modules!("tests/", "^((?!mod.rs).)*$");
+import!(
+    "" where match "" where use ""
+);
+
+import!(
+    "" where match "" as pub
+);
+
+// - - -
+
+import!(
+    "" where "" use as pub mod
+);
+
+import!(
+    "" where "" use as pub
+);
+
+import!(
+    "" where "" use as ""
+);
