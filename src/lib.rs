@@ -1,242 +1,163 @@
-use core::panic;
-use std::path;
+use std::str::Chars;
 
 extern crate proc_macro;
 
-struct ModuleConfig {
-    pub pub_keyword: bool,
-    pub mod_keyword: bool,
+// - - -
 
-    pub directory: String,
-    pub entry: String,
+#[derive(Clone, Debug, PartialEq)]
+enum Token {
+    Identifier,
+    String,
+    Unknown,
+    None
 }
 
-fn parse_modules(config: ModuleConfig, modules: Vec<String>) -> Vec<String> {
-    let mut parsed_modules = Vec::new();
+#[derive(Clone, Debug)]
+struct TokenInfo {
+    category: Token,
+    value: String,
+    cursor: usize
+}
 
-    for module in modules {
-        let mut parsed_module = String::new();
+impl Default for TokenInfo {
+    fn default() -> Self {
+        Self { category: Token::None, value: String::new(), cursor: 0 }
+    }
+}
 
-        let module = module.replace(&config.directory, "");
-        let module = module.replace(".rs", "");
+impl TokenInfo {
+    pub fn new(category: Token, value: String, cursor: usize) -> Self {
+        Self { category, value, cursor }
+    }
+}
 
-        let module = module.replace(path::MAIN_SEPARATOR_STR, "::");
+// - - -
 
-        if module.len() == 0 {
-            continue;
-        }
+struct LexerScope <'a> {
+    pub identifiers: Vec<TokenInfo>,
+    pub chars: Chars<'a>,
+    pub cursor: usize
+}
 
-        if config.pub_keyword == true {
-            parsed_module.push_str("pub ");
-        }
-
-        if config.mod_keyword == true {
-            parsed_module.push_str("mod ");
-        }
-
-        parsed_module.push_str(&module);
-
-        if config.entry.len() > 0 {
-            parsed_module.push_str("::");
-            parsed_module.push_str(&config.entry);
-        }
-
-        parsed_module.push_str(";");
-
-        parsed_modules.push(parsed_module);
+impl <'a> LexerScope <'a> {
+    pub fn prev(&mut self) -> Option<char> {
+        self.cursor -= 1;
+        self.chars.next_back()
     }
 
-    parsed_modules
+    pub fn next(&mut self) -> Option<char> {
+        self.cursor += 1;
+        self.chars.next()
+    }
 }
 
-fn find_modules(
-    directory: &String,
-    pattern: &fancy_regex::Regex,
-) -> Result<Vec<String>, fancy_regex::Error> {
-    let mut modules = Vec::new();
-
-    for path in std::fs::read_dir(directory).unwrap() {
-        let path = path.unwrap().path();
-
-        let path = path.to_str().unwrap();
-
-        if pattern.is_match(path).unwrap() {
-            modules.push(path.to_string());
+impl <'a> LexerScope <'a> {
+    pub fn new(input: &'a str) -> Self {
+        Self {
+            identifiers: Vec::new(), chars: input.chars(), cursor: 0
         }
     }
-
-    Ok(modules)
 }
 
-fn parse_parameters(input: String) -> Vec<String> {
-    let mut parameters = Vec::new();
+fn lexer(scope: &mut LexerScope) -> Vec<TokenInfo> {
+    while let Some(char) = scope.next() {
+        if char == ' ' { continue; }
+        
+        match char {
+            'a'..='z' | 'A'..='Z' => {
+                let mut identifier = String::new();
+                identifier.push(char);
 
-    let mut parameter = String::new();
+                while let Some(char) = scope.next() {
+                    if char == ' ' { break; }
 
-    let mut is_escape = false;
-    let mut is_string = false;
+                    identifier.push(char);
+                }
 
-    for c in input.chars() {
-        if c == ',' && is_string == false {
-            parameters.push(parameter.clone());
-            parameter.clear();
-        } else if c == ' ' && is_string == false {
-            continue;
-        } else if c == '"' && is_escape == false {
-            is_string = !is_string;
-        } else if c == '\\' && is_escape == false && is_string == true {
-            is_escape = true;
-        } else if is_string {
-            parameter.push(c);
-            is_escape = false;
-        } else {
-            panic!("Invalid character: {}", c);
+                scope.identifiers.push(
+                    TokenInfo::new(Token::Identifier, identifier, scope.cursor)
+                );
+            },
+            '"' => {
+                let mut string = String::new();
+                let mut escape = false;
+
+                while let Some(char) = scope.next() {
+                    if escape == false {
+                        if char == '\\' { escape = true; continue }
+                        if char == '"' { break; }
+                    }
+
+                    string.push(char);
+                    escape = false;
+                }
+
+                scope.identifiers.push(
+                    TokenInfo::new(Token::String, string, scope.cursor)
+                );
+            },
+            _ => {
+                scope.identifiers.push(
+                    TokenInfo::new(Token::Unknown, char.to_string(), scope.cursor)
+                );
+            }
         }
     }
 
-    parameters.push(parameter);
-    parameters
+    scope.identifiers.clone()
 }
 
-fn module_handler(
-    pub_keyword: bool, mod_keyword: bool, mut directory: String,
-    pattern: String, entry: String,
-)
-    -> proc_macro::TokenStream
-{
-    if directory.ends_with("/") == false {
-        directory.push_str(path::MAIN_SEPARATOR_STR);
+// - - -
+
+struct ParserScope {
+    pub tokens: Vec<TokenInfo>,
+    pub cursor: usize
+}
+
+impl ParserScope {
+    pub fn new(tokens: Vec<TokenInfo>) -> Self {
+        Self { tokens, cursor: 0 }
+    }
+}
+
+impl ParserScope {
+    pub fn prev(&mut self) -> Option<TokenInfo> {
+        self.cursor -= 1;
+        self.tokens.get(self.cursor).cloned()
     }
 
-    let pattern = fancy_regex::Regex::new(&pattern).unwrap();
-
-    let modules = find_modules(&directory, &pattern).unwrap();
-
-    let module_config = ModuleConfig {
-        pub_keyword, mod_keyword,
-        directory, entry,
-    };
-
-    let modules = parse_modules(module_config, modules);
-    let output = modules.join("\n");
-
-    output.parse().unwrap()
+    pub fn next(&mut self) -> Option<TokenInfo> {
+        self.cursor += 1;
+        self.tokens.get(self.cursor).cloned()
+    }
 }
 
-/// #### Description
-/// 
-/// Import public modules from a directory.
-/// 
-/// #### Example
-/// 
-/// ```rust, ignore
-/// use import_modules::import_pub_modules;
-/// 
-/// import_pub_modules!("src", "^((?!mod.rs).)*$");
-/// ```
-/// 
-/// #### Returns
-/// 
-/// ```rust, ignore
-/// pub mod module1;
-/// pub mod moduleN;
-/// ```
-/// 
-#[proc_macro]
-pub fn import_pub_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = input.to_string();
-
-    let parameters = parse_parameters(input);
-
-    if parameters.len() != 2 {
-        panic!("Invalid number of parameters: {}", parameters.len());
+fn parser(scope: &mut ParserScope) {
+    if scope.next().unwrap_or(TokenInfo::default()).category != Token::String {
+        panic!("The first token must be a string literal");
     }
 
-    module_handler(
-        true, true, parameters[0].clone(), parameters[1].clone(), "".to_string(),
-    )
-}
+    let t_1 = scope.next().unwrap_or(TokenInfo::default());
 
-/// #### Description
-/// 
-/// Import modules from a directory.
-///
-/// #### Example
-/// 
-/// ```rust, ignore
-/// use import_modules::import_modules;
-/// 
-/// import_modules!("src", "^((?!mod.rs).)*$");
-/// ```
-/// 
-/// #### Returns
-/// 
-/// ```rust, ignore
-/// mod module1;
-/// mod moduleN;
-/// ```
-/// 
-#[proc_macro]
-pub fn import_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = input.to_string();
-
-    let parameters = parse_parameters(input);
-
-    if parameters.len() != 2 {
-        panic!("Invalid number of parameters: {}", parameters.len());
+    if t_1.category != Token::Identifier {
+        panic!("The second token must be an identifier");
     }
 
-    module_handler(
-        false, true, parameters[0].clone(), parameters[1].clone(), "".to_string(),
-    )
+    let t_2 = scope.next().unwrap_or(TokenInfo::default());
+
+    
 }
 
-/// #### Description
-/// 
-/// Import modules from a directory on function scope.
-/// 
-/// #### Example
-/// 
-/// ```rust, ignore
-/// use import_modules::{import_modules, import_scope_modules};
-/// 
-/// import_modules!("src", "^((?!mod.rs).)*$");
-/// 
-/// fn main() {
-///    import_scope_modules!("src", "^((?!mod.rs).)*$", "function()");
-/// }
-/// ```
-/// 
-/// #### Returns
-/// 
-/// ```rust, ignore
-/// mod module1;
-/// mod moduleN;
-/// 
-/// fn main() {
-///    module1::function();
-///    moduleN::function();
-/// }
-/// ```
-/// 
-#[proc_macro]
-pub fn import_scope_modules(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = input.to_string();
-
-    let parameters = parse_parameters(input);
-
-    if parameters.len() != 3 {
-        panic!("Invalid number of parameters: {}", parameters.len());
-    }
-
-    module_handler(
-        false, false, parameters[0].clone(), parameters[1].clone(), parameters[2].clone(),
-    )
-}
+// - - -
 
 #[proc_macro]
 pub fn import(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    
-    
+    let input = input.to_string();
+
+    let mut scope = LexerScope::new(&input);
+    let tokens = lexer(&mut scope);    
+
+    println!("{:?}", tokens);
+
     "".parse().unwrap()
 }
