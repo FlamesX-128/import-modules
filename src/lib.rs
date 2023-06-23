@@ -1,6 +1,8 @@
-use std::str::Chars;
+use std::{str::Chars, fmt::Display, path::Path};
 
 extern crate proc_macro;
+
+use fancy_regex::Regex;
 
 // - - -
 
@@ -10,6 +12,17 @@ enum Token {
     String,
     Unknown,
     None
+}
+
+impl Display for Token{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Token::Identifier => write!(f, "Identifier"),
+            Token::String => write!(f, "String"),
+            Token::Unknown => write!(f, "Unknown"),
+            Token::None => write!(f, "None")
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -22,6 +35,12 @@ struct TokenInfo {
 impl Default for TokenInfo {
     fn default() -> Self {
         Self { category: Token::None, value: String::new(), cursor: 0 }
+    }
+}
+
+impl TokenInfo {
+    fn default_with_cursor(cursor: usize) -> Self {
+        Self { category: Token::None, value: String::new(), cursor }
     }
 }
 
@@ -40,11 +59,6 @@ struct LexerScope <'a> {
 }
 
 impl <'a> LexerScope <'a> {
-    pub fn prev(&mut self) -> Option<char> {
-        self.cursor -= 1;
-        self.chars.next_back()
-    }
-
     pub fn next(&mut self) -> Option<char> {
         self.cursor += 1;
         self.chars.next()
@@ -110,42 +124,162 @@ fn lexer(scope: &mut LexerScope) -> Vec<TokenInfo> {
 // - - -
 
 struct ParserScope {
+    pub document: String,
     pub tokens: Vec<TokenInfo>,
     pub cursor: usize
 }
 
 impl ParserScope {
-    pub fn new(tokens: Vec<TokenInfo>) -> Self {
-        Self { tokens, cursor: 0 }
+    pub fn new(document: String, tokens: Vec<TokenInfo>) -> Self {
+        Self { document, tokens, cursor: 0 }
     }
 }
 
 impl ParserScope {
-    pub fn prev(&mut self) -> Option<TokenInfo> {
-        self.cursor -= 1;
-        self.tokens.get(self.cursor).cloned()
-    }
-
     pub fn next(&mut self) -> Option<TokenInfo> {
         self.cursor += 1;
-        self.tokens.get(self.cursor).cloned()
+        self.tokens.get(self.cursor - 1).cloned()
+    }
+}
+
+impl ParserScope {
+    pub fn panic(&self, message: String, cursor: usize) {
+        let mut trace = String::new();
+
+        for _ in 0..(cursor - 1) {
+            trace.push('-');
+        }
+
+        trace.push('^');
+
+        panic!(
+            "{}\n {}\n {}", message, self.document, trace
+        );
     }
 }
 
 fn parser(scope: &mut ParserScope) {
-    if scope.next().unwrap_or(TokenInfo::default()).category != Token::String {
-        panic!("The first token must be a string literal");
+    // [Directory]
+    let token = scope.next().unwrap_or(TokenInfo::default());
+
+    if token.category != Token::String {
+        scope.panic(
+            format!("Expected string, found \"None\" at {}", token.cursor),
+            token.cursor
+        );
     }
 
-    let t_1 = scope.next().unwrap_or(TokenInfo::default());
-
-    if t_1.category != Token::Identifier {
-        panic!("The second token must be an identifier");
+    // Validate directory
+    if Path::new(&token.value).exists() == false {
+        scope.panic(
+            format!("Directory \"{}\" does not exist at {}", token.value, token.cursor),
+            token.cursor
+        );
     }
 
-    let t_2 = scope.next().unwrap_or(TokenInfo::default());
+    // where
+    let token = scope.next().unwrap_or(TokenInfo::default_with_cursor(token.cursor));
 
-    
+    if token.category != Token::Identifier || token.value != "where" {
+        scope.panic(
+            format!("Identifier \"where\" expected, found \"{}\" at {}", token.value, token.cursor),
+            token.cursor
+        )
+    }
+
+    // [Pattern]
+    let token = scope.next().unwrap_or(TokenInfo::default_with_cursor(token.cursor));
+
+    if token.category != Token::String {
+        scope.panic(
+            format!("Expected string, found \"{}\" at {}", token.value, token.cursor),
+            token.cursor
+        );
+    }
+
+    // Validate pattern
+    let pattern = token.value.clone();
+
+    match Regex::new(&pattern) {
+        Err(err) => {
+            scope.panic(
+                format!("{}", err), token.cursor
+            );
+        }
+        Ok(_) => {},
+    }
+
+    // use
+    let token = scope.next().unwrap_or(TokenInfo::default_with_cursor(token.cursor));
+
+    if token.category != Token::Identifier || token.value != "use" {
+        scope.panic(
+            format!("Identifier \"use\" expected, found \"{}\" at {}", token.value, token.cursor),
+            token.cursor
+        );
+    }
+
+    // as
+    let token = scope.next().unwrap_or(TokenInfo::default_with_cursor(token.cursor));
+
+    if token.category != Token::Identifier || token.value != "as" {
+        scope.panic(
+            format!("Identifier \"as\" expected, found \"{}\" at {}", token.value, token.cursor),
+            token.cursor
+        );
+    }
+
+    // [Module] | mod | pub mod
+    let token = scope.next().unwrap_or(TokenInfo::default_with_cursor(token.cursor));
+
+    match token.category {
+        Token::String => {
+            if token.category != Token::String {
+                scope.panic(
+                    format!("Expected string, found \"{}\" at {}", token.category, token.cursor),
+                    token.cursor
+                )
+            }
+        },
+        Token::Identifier => {
+            if token.category != Token::Identifier {
+                scope.panic(
+                    format!("Expected identifier, found \"{}\" at {}", token.category, token.cursor),
+                    token.cursor
+                )
+            }
+
+            if token.value == "pub" {
+                // mod
+                let token = scope.next().unwrap_or(TokenInfo::default_with_cursor(token.cursor));
+
+                if token.category != Token::Identifier {
+                    scope.panic(
+                        format!("Identifier \"mod\" expected, found \"{}\" at {}", token.value, token.cursor),
+                        token.cursor
+                    )
+                }
+
+                if token.value != "mod" {
+                    scope.panic(
+                        format!("Identifier \"mod\" expected, found \"{}\" at {}", token.value, token.cursor),
+                        token.cursor
+                    )
+                }
+            } else if token.value != "mod" {
+                scope.panic(
+                    format!("Identifier \"mod\" expected, found \"{}\" at {}", token.value, token.cursor),
+                    token.cursor
+                )
+            }
+        },
+        _ => {
+            scope.panic(
+                format!("Expected string or identifier, found \"{}\" at {}", token.category, token.cursor),
+                token.cursor
+            )
+        }
+    }
 }
 
 // - - -
@@ -155,7 +289,11 @@ pub fn import(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = input.to_string();
 
     let mut scope = LexerScope::new(&input);
-    let tokens = lexer(&mut scope);    
+    let tokens = lexer(&mut scope);
+
+    let mut scope = ParserScope::new(input, tokens.clone());
+
+    parser(&mut scope);
 
     println!("{:?}", tokens);
 

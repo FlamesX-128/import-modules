@@ -1,5 +1,5 @@
 use import_modules::import;
 
 import!(
-    "12132" where "algo" use as "aaaaa"
+    "a" where "" use as pub mod
 );
