@@ -10,7 +10,7 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn from<T>(entry: T) -> Self
+    fn from<T>(entry: T) -> Self
     where
         T: AsRef<str>,
     {
@@ -37,6 +37,24 @@ impl Token {
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.to_string())
+    }
+}
+
+impl From<&String> for Token {
+    fn from(entry: &String) -> Self {
+        Token::from(entry)
+    }
+}
+
+impl From<String> for Token {
+    fn from(entry: String) -> Self {
+        Token::from(entry)
+    }
+}
+
+impl From<&str> for Token {
+    fn from(entry: &str) -> Self {
+        Token::from(entry)
     }
 }
 
