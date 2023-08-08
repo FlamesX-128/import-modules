@@ -31,3 +31,5 @@ proc_macro = true
 fancy-regex = "0.11"
 quote = "1.0"
 proc-macro-error = "1.0"
+syn = "2.0"
+
