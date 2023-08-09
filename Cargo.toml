@@ -18,12 +18,8 @@ homepage = "https://github.com/FlamesX-128/import-modules#import-modules"
 
 keywords = [
   "import-modules",
-  "import-module",
   "import-all",
-  "import-all-modules",
-  "import-all-module",
   "import",
-  "modules",
   "module",
   "all"
 ]
