@@ -1,26 +1,21 @@
-/*use import_modules::import;
-
-import!(
-    "tests/" where "" use as mod
-);*/
-
 use import_modules::import;
+
+import!({
+    "directory": "tests"
+});
 
 #[test]
 fn test() {
-    /*let current_file = file!();
-    let current_directory = env!("PWD"); // This will retrieve the current working directory
+    let data = import!({
+        "directory": "tests/math/",
+        "inter_process": "math::{}::handler,",
+        "post_process": "vec![{}]"
+    });
 
-    println!("Current File: {}", current_file);
-    println!("Current Directory: {}", current_directory);*/
+    // The first function is the sum of two numbers.
+    assert!(data[0](16, 4) == 20);
 
-    // {module1{module2{module3,module4{module5,module6}},module7}}
-    /*import!(
-        {module1{module2{module3,module4{module5,module6}},module7}}
-    );*/
-
-    import!(
-        use models::{a::{*}, b::{*}}
-    );
+    // The second function is the division of two numbers.
+    assert!(data[1](16, 4) == 4);
 }
 

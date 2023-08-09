@@ -2,16 +2,56 @@
 
 ## Description
 
-import-modules is a crate that enhances the ease of importing modules using regex patterns. It is based on the npm package require-all.
+`import-modules` is a library based on [require-all](https://www.npmjs.com/package/require-all)
 
 ## Examples
 
-Review the tests directory to see how to use it properly.
+This is based on the [import-modules](https://github.com/FlamesX-128/import-modules) test directory.
+
+### Inter Process and Post Process
+
+Intermediary processes allow you to manipulate how the modules are processed.
+
+#### Input
 
 ```rust, ignore
-use import_modules::import_pub_modules;
+use import_macro::import;
 
-import_pub_modules!("tests/pub_modules/", "^((?!mod\\.rs).)*$");
+// The {} is replaced by the module.
+let functions = import!({
+    "directory": "tests/math/",
+    "inter_process": "math::{}::handler,",
+    "post_process": "vec![{}]"
+});
+```
+
+#### Output
+
+```rust, ignore
+let functions = vec![
+    math::add::handler,
+    math::sub::handler,
+];
+```
+
+### Module
+
+Similar to intermediate process, this imports it by default as Rust module.
+
+#### Input
+
+```rust, ignore
+use import_macro::import;
+
+import!({
+    "directory": "tests",
+});
+```
+
+#### Output
+
+```rust, ignore
+mod math;
 ```
 
 ## Authors
@@ -20,25 +60,55 @@ import_pub_modules!("tests/pub_modules/", "^((?!mod\\.rs).)*$");
 
 ## Change log
 
-- 0.1.5
-    + The problem fixed: Misdeclared description in Cargo.toml.
+### 1.0.0 - The new import
 
-- 0.1.4
-    + Additional documentation has been added, including the proc macros `import_pub_modules`, `import_modules`, `import_scope_modules`.
+All macros have been eliminated. Instead, use the new `import` macro, which employs JSON configuration. The following valid configuration is available:
 
-- 0.1.3
-    + The problem fixed: String parameters now support escaping characters with backslashes, resolving compatibility with Windows.
+```rust, ignore
+struct Config {
+    /// The directory where the modules are located.
+    pub directory: String,
 
-- 0.1.2
-    + The problem fixed: The macro import_pub_modules did not make the modules public.
-    + The problem fixed: Directories are already included as modules.
+    /// Recursive search for modules.
+    pub recursive: bool,
 
-- 0.1.1
-    + The problem fixed: If the last slash was not included in the directory path, it would cause an error.
+    /// Intermediary processes allow you to manipulate how the modules are processed.
+    /// Intermediary processes replaces {} with the module.
+    pub inter_process: Option<String>,
 
-- 0.1
-    + First release
+    /// Post processes allow you to manipulate how the modules are processed.
+    /// Post_process replaces the with the module.
+    pub post_process: Option<String>,
+
+    /// Similar to intermediate process, this imports it by default as a public Rust module.
+    pub public_module: Option<bool>,
+
+    /// Similar to intermediate process, this imports it by default as a Rust module.
+    ///
+    /// Default if you don't use inter_process: true
+    /// Default if you use public_module: true
+    pub module: Option<bool>,
+
+    /// Exclude files from the module list.
+    ///
+    /// Default: ["lib.rs", "main.rs", "mod.rs"]
+    pub exclude_files: Vec<Regex>,
+
+    /// Exclude directories from the module list.
+    ///
+    /// Default: [".git", ".github", "lib", "src" "tests", "target"]
+    /// Note: Only if ends by directory separator.
+    pub exclude_dirs: Vec<Regex>,
+
+    /// Include files from the module list.
+    pub include_files: Vec<Regex>,
+
+    /// Include directories from the module list.
+    pub include_dirs: Vec<Regex>,
+}
+```
 
 ## License
 
 This project is licensed under the [MIT](https://github.com/FlamesX-128/import-modules/blob/main/LICENSE) license.
+
